@@ -1,0 +1,27 @@
+name: Skylore JobSpy
+
+on:
+  schedule:
+    # 3:47 PM India time, Monday to Friday (10:17 UTC). The sheets run at 5 PM.
+    - cron: '17 10 * * 1-5'
+  workflow_dispatch: {}
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        sheet: [USA, CANADA]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -U python-jobspy requests
+      - run: python jobspy_runner.py
+        env:
+          SHEET_NAME: ${{ matrix.sheet }}
+          SHEET_URL: ${{ secrets[format('{0}_URL', matrix.sheet)] }}
+          SHEET_TOKEN: ${{ secrets[format('{0}_TOKEN', matrix.sheet)] }}
